@@ -1,7 +1,14 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Room, RoomStatus } from './schemas/room.schema';
+import { Room, RoomDocumentStatus, RoomStatus } from './schemas/room.schema';
 import * as mongoose from 'mongoose';
+import { Query } from 'express-serve-static-core';
+import { CreateRoomDto } from './dto/create-room.dto';
+import { UpdateRoomDto } from './dto/update-room.dto';
 
 @Injectable()
 export class RoomService {
@@ -9,11 +16,47 @@ export class RoomService {
     @InjectModel(Room.name)
     private roomModel: mongoose.Model<Room>,
   ) {}
-  async getAllRooms(): Promise<Room[]> {
-    const books = await this.roomModel.find();
+  async getAllRooms(query: Query): Promise<Room[]> {
+    const resultPerPage = 10;
+    const page = Number(query.page) || 1;
+    const skips = resultPerPage * (page - 1);
+    const searchFilter = query.search
+      ? {
+          roomStatus: RoomStatus.AVAILABLE,
+          status: RoomDocumentStatus.APPROVED,
+          $or: [
+            {
+              title: {
+                $regex: query.search,
+                $options: 'i',
+              },
+              description: {
+                $regex: query.search,
+                $options: 'i',
+              },
+              province: {
+                $regex: query.search,
+                $options: 'i',
+              },
+              city: {
+                $regex: query.search,
+                $options: 'i',
+              },
+              address: {
+                $regex: query.search,
+                $options: 'i',
+              },
+            },
+          ],
+        }
+      : {};
+    const books = await this.roomModel
+      .find(searchFilter)
+      .limit(resultPerPage)
+      .skip(skips);
     return books;
   }
-  async isDuplicateRoom(room: Room): Promise<boolean> {
+  async isDuplicateRoom(room: CreateRoomDto): Promise<boolean> {
     const { title, address, owner, province, city } = room;
     const existingRoom = await this.roomModel.findOne({
       title,
@@ -25,25 +68,29 @@ export class RoomService {
     return !!existingRoom;
   }
 
-  async createRoom(room: Room): Promise<Room> {
-    if(await this.isDuplicateRoom(room)){
-        throw new BadRequestException('Duplicate entry of a room!');
+  async createRoom(room: CreateRoomDto): Promise<Room> {
+    if (await this.isDuplicateRoom(room)) {
+      throw new BadRequestException('Duplicate entry of a room!');
     }
     const createdRoom = await this.roomModel.create(room);
     return createdRoom;
   }
 
-  async findRoomBySlug(slug:string): Promise<Room>{
+  async findRoomBySlug(slug: string): Promise<Room> {
     const room = await this.roomModel.findOne({
-        slug
+      slug,
     });
-    if(!room) throw new NotFoundException("No room found!")
+    if (!room) throw new NotFoundException('No room found!');
     return room;
   }
 
-  async updateRoom(room: Room, id: string): Promise<Room>{
-    const updatedRoom = await this.roomModel.findByIdAndUpdate(id, {...room, roomStatus: RoomStatus.PENDING_APPROVAL}, {new: true})
-    if(!updatedRoom) throw new NotFoundException("Room not found!")
+  async updateRoom(room: UpdateRoomDto, id: string): Promise<Room> {
+    const updatedRoom = await this.roomModel.findByIdAndUpdate(
+      id,
+      { ...room, status: RoomDocumentStatus.PENDING },
+      { new: true },
+    );
+    if (!updatedRoom) throw new NotFoundException('Room not found!');
     return updatedRoom;
   }
 }
