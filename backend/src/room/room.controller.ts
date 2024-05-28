@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { RoomService } from './room.service';
 import { Room } from './schemas/room.schema';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { Query as ExpressQuery } from 'express-serve-static-core';
-import { ApiAcceptedResponse, ApiCreatedResponse, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 
 @ApiTags("Rooms")
 @Controller('rooms')
@@ -14,6 +15,7 @@ export class RoomController {
   @Get()
   @ApiResponse({status: 200 ,description: "All rooms fetched.", type: Room, isArray: true})
   @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number' })
+  @UseGuards(JwtAuthGuard)
   async getAllRooms(@Query() query: ExpressQuery): Promise<Room[]> {
     return this.roomService.getAllRooms(query);
   }
