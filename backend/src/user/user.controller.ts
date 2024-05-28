@@ -1,17 +1,32 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
-import { User } from './schemas/user.schema';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { Request } from 'express';
 
 @ApiTags("User")
-@Controller('user')
+@Controller('users')
 export class UserController {
   constructor(private userService: UserService) {}
 
-  @ApiCreatedResponse({ description: 'User created.', type: User })
-  @Post('register')
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async viewProfile(@Req() req: Request){
+    return req.user;
+  }
+
+  @ApiCreatedResponse({ description: 'User created.'})
+  @Post('')
   async registerUser(@Body() user: CreateUserDto): Promise<any> {
     return this.userService.registerUser(user);
+  }
+
+  @ApiCreatedResponse({ description: 'User updated.'})
+  @Put('')
+  @UseGuards(JwtAuthGuard)
+  async updateUser(@Body() user: UpdateUserDto, @Req() req: Request): Promise<any> {
+    return this.userService.updateUser(user, req);
   }
 }

@@ -51,7 +51,7 @@ export class Room {
   @Prop({ type: [String] })
   images: string[];
 
-  @ApiProperty({ description: 'Room number', example: 101 })
+  @ApiProperty({ description: 'Room number', example: 2 })
   @Prop({ required: true })
   number: number;
 
