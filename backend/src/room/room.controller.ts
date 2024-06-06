@@ -39,7 +39,6 @@ export class RoomController {
     type: Number,
     description: 'Page number',
   })
-  @UseGuards(JwtAuthGuard)
   async getAllRooms(@Query() query: ExpressQuery): Promise<Room[]> {
     return this.roomService.getAllRooms(query);
   }
