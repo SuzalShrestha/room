@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import Image from "next/image";
 import Link from "next/link";
+import { Room } from "@/types/Room";
 
 export const features = [
   {
@@ -74,7 +75,7 @@ export const features = [
   },
 ];
 
-const CardsAndFilters = () => {
+const CardsAndFilters = ({ rooms }: {rooms: Room[]}) => {
   return (
     <>
       <div className="flex flex-col items-start justify-center md:flex-row md:justify-between md:items-center px-4 gap-4 overflow-hidden">
@@ -113,37 +114,43 @@ const CardsAndFilters = () => {
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 py-10">
-        {Array.from({length: 20}).map((_, index) => (
-          <Card
-            key={index + 1}
-            className="rounded-none shadow-none border-none"
-          >
-            <CardContent className="mt-4">
-              <Link
-                className="flex flex-col items-start justify-center gap-2 flex-nowrap"
-                href={"/room/slug"}
-              >
-                <Image
-                  alt="room cover"
-                  src={"/sample-room.jpg"}
-                  width={300}
-                  height={400}
-                  className="object-cover object-center w-full h-full rounded-lg"
-                />
-                <div>
-                  <h2 className="text-base font-bold text-slate-900">
-                    Cozy Apartment Near the Park
-                  </h2>
-                  <p className="text-slate-700">Gandaki, Kathmandu</p>
-                  <p>
-                    Rs. <span className="font-semibold text-slate-700">5000</span> per month
-                  </p>
-                  <p className="text-slate-700">Hosted by <span className="font-bold">Bhuwan Acharya</span></p>
-                </div>
-              </Link>
-            </CardContent>
-          </Card>
-        ))}
+        {rooms &&
+          rooms?.map((room, index) => (
+            <Card
+              key={index + 1}
+              className="rounded-none shadow-none border-none"
+            >
+              <CardContent className="mt-4">
+                <Link
+                  className="flex flex-col items-start justify-center gap-2 flex-nowrap"
+                  href={"/room/slug"}
+                >
+                  <Image
+                    alt="room cover"
+                    src={"/sample-room.jpg"}
+                    width={300}
+                    height={400}
+                    className="object-cover object-center w-full h-full rounded-lg"
+                  />
+                  <div>
+                    <h2 className="text-base font-bold text-slate-900 capitalize">
+                      {room.title}
+                    </h2>
+                    <p className="text-slate-700">{room.province}, {room.city}</p>
+                    <p>
+                      Rs.{" "}
+                      <span className="font-semibold text-slate-700">{room.price}</span>{" "}
+                      per month
+                    </p>
+                    <p className="text-slate-700">
+                      Hosted by{" "}
+                      <span className="font-bold">{room.owner}</span>
+                    </p>
+                  </div>
+                </Link>
+              </CardContent>
+            </Card>
+          ))}
       </div>
     </>
   );
